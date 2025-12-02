@@ -1,0 +1,72 @@
+name: 'Build and Deploy'
+
+run-name: 'Build 1.0.${{ github.run_number }}'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/**
+      - .github/**
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      fabricScriptsFolder: .build/scripts/fabric
+      pythonVersion: 3.9
+      deploymentPipelineName: gs_tdm_dp
+      majorVersion: '1'
+      minorVersion: '0'
+      buildNumber: ${{ github.env.majorVersion }}.${{ github.env.minorVersion }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Print Build Number
+        run: 'echo "Build Number: ${{ env.buildNumber }}"'
+
+      - name: Placeholder
+        run: echo 'Temporary Placeholder'
+
+  deploy_dev:
+    name: Deploy to Dev
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      thisEnv: DEV
+      workspaceName: gs_tdm_dev
+      notebookName: nb_test_runner
+      dataQualityChecksDeploymentNotebookName: nb_deploy_data_quality_checks_yaml_files
+      fabricScriptsFolder: .build/scripts/fabric
+      pythonVersion: 3.9
+      tenantId: ${{ secrets.TENANT_ID }}
+      refreshToken: ${{ secrets.REFRESH_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.pythonVersion }}
+
+      - name: Install required dependencies
+        run: pip install requests
+
+      - name: Synchronize Workspace with Git Repository
+        run: |
+          python ${{ env.fabricScriptsFolder }}/update-fabric-workspace-from-git.py \
+            --tenant-id ${{ env.tenantId }} \
+            --refresh-token ${{ env.refreshToken }} \
+            --workspace-name ${{ env.workspaceName }}
+
+      - name: Run Unit Tests
+        run: |
+          python ${{ env.fabricScriptsFolder }}/run-notebook.py \
+            --tenant-id ${{ env.tenantId }} \
+            --refresh-token ${{ env.refreshToken }} \
+            --workspace-name ${{ env.workspaceName }} \
+            --notebook-name ${{ env.notebookName }}
