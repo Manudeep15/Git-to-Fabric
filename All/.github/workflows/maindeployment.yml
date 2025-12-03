@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - src/**
+      - fabricobjects/**
       - .github/**
 
 jobs:
@@ -37,8 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       thisEnv: DEV
-      workspaceName: gs_tdm_dev
-      notebookName: nb_test_runner
+      workspaceName: Test_WS
+      notebookName: testnotebook
       dataQualityChecksDeploymentNotebookName: nb_deploy_data_quality_checks_yaml_files
       fabricScriptsFolder: .build/scripts/fabric
       pythonVersion: 3.9
